@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   auto-merge:
@@ -96,3 +97,7 @@ jobs:
             --squash \
             --delete-branch \
             --subject "$PR_TITLE"
+
+          # GITHUB_TOKEN merges do not fire push-triggered workflows.
+          # workflow_dispatch is an explicit exception and rebuilds Pages.
+          gh workflow run pages.yml --repo "${{ github.repository }}" --ref main

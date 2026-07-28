@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main # default branch
+  # Allow auto-merge workflows to redeploy after squash-merge.
+  # Pushes made with GITHUB_TOKEN do not trigger other workflows.
+  workflow_dispatch:
 
 jobs:
   build:
