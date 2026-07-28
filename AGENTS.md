@@ -25,7 +25,7 @@ The agent should:
 ### Idempotency
 
 - Today’s date must use timezone `Asia/Shanghai` as `YYYY-MM-DD`.
-- If `source/_posts/hn-daily-YYYY-MM-DD.md` already exists, or another post for the same date already has category `【Hacknews Daily Summary】` / `Hacknews Daily Summary`, do nothing (no new file, no PR).
+- If `source/_posts/hn-daily-YYYY-MM-DD.md` already exists, or another post for the same date already has category `Hacknews Daily Summary`, do nothing (no new file, no PR).
 - If Memories are available: skip when `last_posted_date` equals today; after a successful PR, update `last_posted_date`.
 
 ### File path
@@ -43,14 +43,14 @@ Match existing posts: YAML list style for `categories` / `tags`.
 title: Hacknews Daily Summary - YYYY-MM-DD
 date: YYYY-MM-DD 09:00:00
 categories:
-  - 【Hacknews Daily Summary】
+  - Hacknews Daily Summary
 tags:
   - Hacker News
   - Daily Summary
 ---
 ```
 
-Category string should be exactly `【Hacknews Daily Summary】` so posts group under that category page.
+Category string should be exactly `Hacknews Daily Summary` so posts group under that category page.
 
 ### Body structure
 
