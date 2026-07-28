@@ -19,7 +19,7 @@ When publishing a daily Hacker News digest:
 
 ### Merge behavior
 
-Cursor Automations do **not** merge PRs. This repo’s GitHub Action `.github/workflows/auto-merge-hn-daily.yml` auto-merges matching HN daily PRs into `main` (which then triggers Pages deploy).
+Cursor Automations do **not** merge PRs. This repo’s GitHub Action `.github/workflows/auto-merge-hn-daily.yml` auto-merges matching HN daily PRs into `main`, then dispatches the Pages workflow (required because `GITHUB_TOKEN` merges do not trigger push-based deploys).
 
 The agent should:
 
@@ -94,7 +94,7 @@ When publishing a daily Product Hunt digest:
 
 ### Merge behavior
 
-Cursor Automations do **not** merge PRs. This repo’s GitHub Action `.github/workflows/auto-merge-ph-daily.yml` auto-merges matching Product Hunt daily PRs into `main` (which then triggers Pages deploy).
+Cursor Automations do **not** merge PRs. This repo’s GitHub Action `.github/workflows/auto-merge-ph-daily.yml` auto-merges matching Product Hunt daily PRs into `main`, then dispatches the Pages workflow (required because `GITHUB_TOKEN` merges do not trigger push-based deploys).
 
 The agent should:
 
