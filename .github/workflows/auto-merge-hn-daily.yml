@@ -1,0 +1,98 @@
+name: Auto-merge HN Daily Summary
+
+# Cursor Automations can open PRs but do not merge them.
+# This workflow merges daily Hacker News digest PRs so Pages can deploy
+# without a manual GitHub click.
+#
+# First-time setup: merge this workflow into main once. After that, matching
+# PRs are merged automatically.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: >
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        startsWith(github.event.pull_request.title, 'Hacknews Daily Summary') ||
+        startsWith(github.event.pull_request.head.ref, 'cursor/hacker-news')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR only adds an HN daily post
+        id: verify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files="$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" --name-only)"
+          echo "Changed files:"
+          echo "$files"
+
+          if [ -z "$files" ]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "No changed files; skipping merge."
+            exit 0
+          fi
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              source/_posts/hn-daily-*.md) ;;
+              *)
+                echo "Refusing auto-merge: unexpected file '$file'"
+                echo "eligible=false" >> "$GITHUB_OUTPUT"
+                exit 1
+                ;;
+            esac
+          done <<< "$files"
+
+          count="$(printf '%s\n' "$files" | sed '/^$/d' | wc -l | tr -d ' ')"
+          if [ "$count" -ne 1 ]; then
+            echo "Refusing auto-merge: expected exactly 1 file, got $count"
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+
+      - name: Mark ready and squash-merge
+        if: steps.verify.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            gh pr ready "$PR_NUMBER" --repo "${{ github.repository }}"
+          fi
+
+          for i in 1 2 3 4 5 6; do
+            state="$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json mergeable,mergeStateStatus -q '.mergeable + ":" + .mergeStateStatus')"
+            echo "merge state: $state"
+            case "$state" in
+              MERGEABLE:CLEAN|MERGEABLE:HAS_HOOKS|MERGEABLE:UNSTABLE|MERGEABLE:BEHIND)
+                break
+                ;;
+              *:DRAFT)
+                gh pr ready "$PR_NUMBER" --repo "${{ github.repository }}" || true
+                ;;
+            esac
+            sleep 5
+          done
+
+          gh pr merge "$PR_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --squash \
+            --delete-branch \
+            --subject "$PR_TITLE"
