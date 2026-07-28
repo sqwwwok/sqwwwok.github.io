@@ -2,6 +2,14 @@
 
 This is a Hexo blog (`sqwwwok.github.io`). Posts live under `source/_posts/`. GitHub Pages deploys on push to `main` via `.github/workflows/pages.yml`.
 
+## Cursor Cloud specific instructions
+
+- Single service: a static Hexo 7 blog. Standard scripts live in `package.json` (`server`, `build`, `clean`). There is no lint or automated test setup.
+- Package manager is npm (CI runs `npm install`; a `yarn.lock` also exists but is not used by CI). Dependencies are refreshed by the startup update script, so you normally don't need to reinstall.
+- Dev server: `npm run server` serves at `http://localhost:4000/` and hot-regenerates on file changes (e.g. `hexo new post "..."` shows up live). Run it under tmux for long-lived sessions.
+- `db.json` is a generated Hexo cache that is (unusually) tracked in git; `npm run build`/`server` will modify it. Do NOT commit incidental `db.json` changes — `git checkout db.json` to discard them.
+- To add content locally, use `npx hexo new post "Title"`; created files land in `source/_posts/`.
+
 ## Hacker News daily summary automation
 
 When publishing a daily Hacker News digest:
